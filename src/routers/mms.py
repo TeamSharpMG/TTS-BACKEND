@@ -8,4 +8,4 @@ def create_wav(text:str):
     try:
         return speak(text)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) 
