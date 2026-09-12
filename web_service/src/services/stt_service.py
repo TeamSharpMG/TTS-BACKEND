@@ -1,54 +1,43 @@
-# main.py
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
-import tempfile
-import os
-import whisper
-import shutil
+# src/services/stt_service.py
+import torch
+import numpy as np
+import soundfile as sf
+import librosa
+from pathlib import Path
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 
-# Variable globale pour le modèle
-stt_model = None
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+MODEL_DIR = BASE_DIR / "ai" / "stt" / "model" # 📌 adapte ce chemin
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # === Startup ===
-    global stt_model
-    print("Chargement du modèle STT...")
-    stt_model = whisper.load_model("base")  # ou ton modèle custom
-    print("Modèle chargé ✅")
-    yield
-    # === Shutdown ===
-    stt_model = None
-    print("Modèle déchargé")
-
-app = FastAPI(title="STT API", lifespan=lifespan)
+_model = None
+_processor = None
 
 
-@app.get("/health")
-def health():
-    return {"status": "ok", "model_loaded": stt_model is not None}
+def _load():
+    global _model, _processor
+    if _model is None:
+        print(f"Chargement STT depuis {MODEL_DIR}")
+        _processor = AutoProcessor.from_pretrained(str(MODEL_DIR))
+        _model = AutoModelForSpeechSeq2Seq.from_pretrained(str(MODEL_DIR)).to(DEVICE).eval()
+    return _model, _processor
 
 
-@app.post("/transcribe")
-async def transcribe(file: UploadFile = File(...)):
-    # Vérification du type de fichier
-    if not file.content_type.startswith("audio/"):
-        raise HTTPException(400, "Le fichier doit être un audio")
+def transcribe(audio_path: str) -> dict:
+    model, processor = _load()
 
-    # Sauvegarde temporaire
-    suffix = os.path.splitext(file.filename)[1] or ".wav"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        shutil.copyfileobj(file.file, tmp)
-        tmp_path = tmp.name
+    # Chargement audio (soundfile) + resample (librosa) → pas besoin de torchaudio
+    audio, sr = sf.read(audio_path)
+    if audio.ndim > 1:
+        audio = audio.mean(axis=1)  # mono
+    if sr != 16000:
+        audio = librosa.resample(audio, orig_sr=sr, target_sr=16000)
 
-    try:
-        result = stt_model.transcribe(tmp_path)
-        return {
-            "text": result["text"].strip(),
-            "language": result.get("language"),
-        }
-    except Exception as e:
-        raise HTTPException(500, f"Erreur de transcription: {str(e)}")
-    finally:
-        os.remove(tmp_path)
+    inputs = processor(audio, sampling_rate=16000, return_tensors="pt")
+    inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
+
+    with torch.no_grad():
+        ids = model.generate(**inputs)
+
+    text = processor.batch_decode(ids, skip_special_tokens=True)[0]
+    return {"text": text.strip()}
