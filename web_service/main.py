@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from src.routers import mms #,create_wav
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.routers import stt
+
 app = FastAPI()
 
 
@@ -63,3 +65,4 @@ def read_root():
     # ...
 
 app.include_router(mms.router, prefix='/model/mms', tags=["model/mms"])
+app.include_router(stt.router)  
