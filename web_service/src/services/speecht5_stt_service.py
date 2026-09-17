@@ -8,7 +8,7 @@ from transformers import SpeechT5ForSpeechToText, SpeechT5Processor
 
 from configuration import MODEL_PATHS
 
-MODEL_DIR = MODEL_PATHS["stt_speecht5"]
+MODEL_DIR = MODEL_PATHS["stt_speecht5_model"]
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MAX_LENGTH = 450
 
