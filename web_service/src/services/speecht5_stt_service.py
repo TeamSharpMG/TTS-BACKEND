@@ -7,8 +7,10 @@ import torch
 from transformers import SpeechT5ForSpeechToText, SpeechT5Processor
 
 from configuration import MODEL_PATHS
+from src.services.correction_service import correct_text
 
-MODEL_DIR = MODEL_PATHS["stt_speecht5_model"]
+# MODEL_DIR = MODEL_PATHS["stt_speecht5_model"] #deleted the old speecht5 model because it doesn't havve anything marginal to show
+MODEL_DIR = MODEL_PATHS["stt_speecht5_model_2"]
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 MAX_LENGTH = 450
 

@@ -1,6 +1,8 @@
 # TTS_BACKEND
 Dossier centralise pour economiser de l'espace pour les modules scipy, transformers et pytorch dans le meme venv
-Note: necessite d'installer une extension de git appellE `git lfs`
+Note: necessite d'installer une extension de git appellé `git lfs`
+
+juste installer l'ensemble des packages dans requirements.txt par `pip install -r requirements.txt`
 
 ## /web_Service
 Dossier pour le backend fastapi

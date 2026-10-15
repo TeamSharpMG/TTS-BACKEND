@@ -7,6 +7,7 @@ import torch
 from transformers import SpeechT5ForSpeechToText, SpeechT5Processor
 
 from configuration import MODEL_PATHS
+from src.services.correction_service import correct_text
 
 MODEL_DIR = MODEL_PATHS["stt_speecht5_model_2"]
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -51,4 +52,6 @@ def transcribe(audio_path: str) -> dict:
         )
 
     text = processor.batch_decode(ids, skip_special_tokens=True)[0]
-    return {"text": text.strip()}
+    return {"text": correct_text(text.strip())}
+    # return {"text": text.strip()} # texte non corrigé
+    
