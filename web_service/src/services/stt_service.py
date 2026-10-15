@@ -6,6 +6,8 @@ import librosa
 from pathlib import Path
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
 
+from src.services.correction_service import correct_text
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 MODEL_DIR = BASE_DIR / "ai" / "stt" / "model" # 📌 adapte ce chemin
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

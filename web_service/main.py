@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.routers import mms
 from src.routers import stt
+from src.routers import speecht5_stt
+from src.routers import speecht5_stt_2
 
 app = FastAPI()
 
@@ -28,3 +30,5 @@ def read_root():
 
 app.include_router(mms.router, prefix='/model/mms', tags=["model/mms"])
 app.include_router(stt.router)  
+app.include_router(speecht5_stt.router)
+app.include_router(speecht5_stt_2.router)
